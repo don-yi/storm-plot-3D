@@ -73,9 +73,9 @@ function PlotStormDPR( ...
     tc89V(tc89V > 265) = NaN;
 
     % TODO: col bar for both height and brightness temp.
-    % % scaling with 0.120 so that the data scales down to 0-20
-    % % and the same color bar can be used for both height and brightness temp.
-    % tc89V = abs(tc89V - 300) .* 0.120;
+    % scaling with 0.120 so that the data scales down to 0-20
+    % and the same color bar can be used for both height and brightness temp.
+    tc89V = abs(tc89V - 300) .* 0.120;
 
     pcolorCentered_old(lon1C_inRange,lat1C_inRange,tc89V);
 
@@ -188,10 +188,10 @@ function PlotStormDPR( ...
     s = surf(xq,yq, gd, 'FaceColor', 'interp', 'FaceAlpha',0);
     s.EdgeColor = 'none';
 
-    % Compile the c-code functions
-    mex smoothpatch_curvature_double.c
-    mex smoothpatch_inversedistance_double.c
-    mex vertex_neighbours_double.c
+    % % Compile the c-code functions
+    % mex smoothpatch_curvature_double.c
+    % mex smoothpatch_inversedistance_double.c
+    % mex vertex_neighbours_double.c
 
     disp('Compiled C-code, proceeding to produce plot');
 
@@ -200,6 +200,33 @@ function PlotStormDPR( ...
 
     patch(s2, 'FaceColor','interp','EdgeAlpha',0, 'FaceAlpha', 0.5);
 
+    %%
+    % Setup the Colormap and graph limits
+    colormap(jet(64));
+    min_data=0;
+    max_data=20;
+
+    % setup axes limits for the plot and colorbar
+    xlim([lonMin2A lonMax2A]);
+    ylim([latMin2A latMax2A]);
+    zlim([min_data max_data]);
+    caxis([min_data max_data]);
+
+    % overlapping the original colorbar
+    hAx=gca;                     % save axes handle main axes
+    h=colorbar('Location','southoutside', ...
+        'Position',[0.15 0.1 0.7 0.02]);% add colorbar, save its handle
+    set(h, 'XDir', 'reverse'); % reverse axis
+    set(h, 'Ticks', [0,5,10,15,20], 'TickLabels', {'20','15','10','5','0'});
+    h2Ax=axes('Position',h.Position,'color','none');  % add mew axes at same posn
+    h2Ax.YAxis.Visible='off'; % hide the x axis of new
+    h2Ax.XAxisLocation = 'top';
+    h2Ax.Position = [0.15 0.11 0.7 0.01];  % put the colorbar back to overlay second axeix
+    h2Ax.XLim=[120 260];       % alternate scale limits new axis
+    xlabel(h, 'Height (km)','HorizontalAlignment','center');
+    xlabel(h2Ax,'89V GHz (Tb)','HorizontalAlignment','center');
+
+    shg;
 
 
 

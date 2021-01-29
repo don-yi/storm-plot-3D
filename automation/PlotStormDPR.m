@@ -217,7 +217,6 @@ function PlotStormDPR( ...
     h=colorbar('Location','southoutside', ...
         'Position',[0.15 0.1 0.7 0.02]);% add colorbar, save its handle
     set(h, 'XDir', 'reverse'); % reverse axis
-    set(h, 'Ticks', [0,5,10,15,20], 'TickLabels', {'20','15','10','5','0'});
     h2Ax=axes('Position',h.Position,'color','none');  % add mew axes at same posn
     h2Ax.YAxis.Visible='off'; % hide the x axis of new
     h2Ax.XAxisLocation = 'top';

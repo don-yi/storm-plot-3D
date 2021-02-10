@@ -1,5 +1,5 @@
 function PlotStormDPR( ...
-    stormName, fname1C, fname2A, centerCoord, outPath, outFname ...
+    stormName, fname1C, fname2A, fnameWwlln, centerCoord, outPath, outFname ...
 )
 
     %%
@@ -225,28 +225,81 @@ function PlotStormDPR( ...
     xlabel(h, 'Height (km)','HorizontalAlignment','center');
     xlabel(h2Ax,'89V GHz (Tb)','HorizontalAlignment','center');
 
+    % Set current back to the main one (done manually so that the other
+    % properties such as visibility are not affected).
+    % -- Connor Bracy 05/25/2020
+    hGifFig = gcf;
+    hGifFig.CurrentAxes = hAx;
+    % Attmpt to speed up the processing by hiding all figures, setting the current figure to the one
+    % that will be used to create the GIF images, and setting it to be the only visible figure
+    % so that getframe isn't slowed down by 'capturing the frame of a figure not visible on the screen'
+    % which supposedly greatly reduces the computational efficiency of the function.
+    % -- Connor Bracy 05/27/2020
+    set(findobj('Type', 'Figure'), 'Visible', 'off'); % Make all figures in this MATLAB workspace non-visible
+    set(0, 'CurrentFigure', hGifFig); % Set the current figure of the workspace to the figure we will use to generate images.
+
+    %%
+    % Draw lightning
+
+    % read data
+    fid = fopen(fnameWwlln, 'r');
+    lightningData = textscan(fid, '%f %f %f %f %f %f %f %f %f %f');
+
+    % split time data field
+    lightningY = lightningData{1};
+    lightningM = lightningData{2};
+    lightningD = lightningData{3};
+    lightningH = lightningData{4};
+    lightningMN = lightningData{5};
+    lightningS = lightningData{6};
+    % org as serial date num
+    lightningTime = datenum( ...
+        lightningY, lightningM, lightningD, lightningH, lightningMN, lightningS ...
+    );
+
+    % split lat & lon data field
+    lightningLat = lightningData{7};
+    lightningLon = lightningData{8};
+    % split dist data field
+    lightningDistEW = lightningData{9};
+    lightningDistNS = lightningData{10};
+
+    % Read storm information from file name
+    % 2A.GPM.DPR.V820180723.20200827-S024128-E031127.V06A.RT-H5
+    stormY = str2double(fname2A(23:26));
+    stormM = str2double(fname2A(27:28));
+    stormD = str2double(fname2A(29:30));
+    stormStartH = str2double(fname2A(33:34));
+    stormStartMN = str2double(fname2A(35:36));
+    stormStartS = str2double(fname2A(37:38));
+    stormEndH = str2double(fname2A(41:42));
+    stormEndMN = str2double(fname2A(43:44));
+    stormEndS = str2double(fname2A(45:46));
+    % org as serial date num
+    stormStartTime = datenum( ...
+        stormY, stormM, stormD, stormStartH, stormStartMN, stormStartS ...
+    );
+    stormEndTime = datenum( ...
+        stormY, stormM, stormD, stormEndH, stormEndMN, stormEndS ...
+    );
+
+    % calculate pythagorean distance from center
+    distCent = (lightningDistEW.^2 + lightningDistNS.^2).^0.5;
+
+    % find ind during storm
+    indDuringStorm = find(stormStartTime <= lightningTime ...
+        & lightningTime <= stormEndTime ...
+    );
+    % find all in radius 600km
+    indDuringInStorm = find(distCent(indDuringStorm) <= 600);
+
+    % pruning lat/lon arrays to ind of during and in storm
+    latFound = lightningLat(indDuringInStorm);
+    lonFound = lightningLon(indDuringInStorm);
+
+
+
     shg;
-
-
-
-    % % Read storm information from file name
-    % % 2A.GPM.DPR.V820180723.20200827-S024128-E031127.V06A.RT-H5
-    % Y = str2double(fname2A(23:26));
-    % M = str2double(fname2A(27:28));
-    % D = str2double(fname2A(29:30));
-
-    % SH = str2double(fname2A(33:34));
-    % SMN = str2double(fname2A(35:36));
-    % SS = str2double(fname2A(37:38));
-
-    % EH = str2double(fname2A(41:42));
-    % EMN = str2double(fname2A(43:44));
-    % ES = str2double(fname2A(45:46));
-
-    % % serial date num of start and end
-    % S = datenum(Y,M,D,SH,SMN,SS);
-    % E = datenum(Y,M,D,EH,EMN,ES);
-
 
 
 end

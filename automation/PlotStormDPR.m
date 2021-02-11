@@ -28,7 +28,7 @@ function PlotStormDPR( ...
     ax.Layer = 'top';
     ax.ZAxis.Visible = 'off';
     ax.Color = [0.95 0.95 0.95];
-    % TODO: check back later
+    % TODO
     % grid(ax, 'off');
 
 
@@ -287,7 +287,8 @@ function PlotStormDPR( ...
     distCent = (lightningDistEW.^2 + lightningDistNS.^2).^0.5;
 
     % find ind during storm
-    indDuringStorm = find(stormStartTime <= lightningTime ...
+    indDuringStorm = find( ...
+        stormStartTime <= lightningTime ...
         & lightningTime <= stormEndTime ...
     );
     % find all in radius 600km
@@ -297,9 +298,33 @@ function PlotStormDPR( ...
     latFound = lightningLat(indDuringInStorm);
     lonFound = lightningLon(indDuringInStorm);
 
+    % scatter on 2D
+    scatter( ...
+        lonFound, latFound, ...
+        50, ...
+        'black', ...
+        'filled', ...
+        'LineWidth', .05, ...
+        'MarkerEdgeColor', 'black' ...
+    );
+
+    % get and scale melting layer height (km)
+    meltingHeightRaw = h5read(fname2A,'/NS/VER/heightZeroDeg');
+    meltingHeight = meltingHeightRaw(:, inRange2A) ./ 1000;
+
+    % TODO
+    % lNheight = ones(length(lat_in), 1) .* meltingLayerMean;
+    % scatter3(lon_in, lat_in, lNheight, 30,'magenta', 'filled'...
+    %     ,'LineWidth',.05, 'MarkerEdgeColor','k');
+
+    % hold off;
+
+    %%
+    % Set the view and lights
+    camlight('headlight');
+    light('Position',[lonMax latMax 0],'Style','local');
 
 
-    shg;
 
 
 end

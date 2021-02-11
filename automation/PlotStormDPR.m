@@ -1,5 +1,5 @@
 function PlotStormDPR( ...
-    stormName, fname1C, fname2A, fnameWwlln, centerCoord, outPath, outFname ...
+    stormName, fname1C, fname2A, fnameWwlln, centerCoord, passtime, outPath, outFname ...
 )
 
     %%
@@ -242,8 +242,8 @@ function PlotStormDPR( ...
     % Draw lightning
 
     % read data
-    fid = fopen(fnameWwlln, 'r');
-    lightningData = textscan(fid, '%f %f %f %f %f %f %f %f %f %f');
+    fidLN = fopen(fnameWwlln, 'r');
+    lightningData = textscan(fidLN, '%f %f %f %f %f %f %f %f %f %f');
 
     % split time data field
     lightningY = lightningData{1};
@@ -286,10 +286,15 @@ function PlotStormDPR( ...
     % calculate pythagorean distance from center
     distCent = (lightningDistEW.^2 + lightningDistNS.^2).^0.5;
 
+    % get passtime as serial date num
+    passtimeDN = datenum(passtime, 'yyyy-mm-dd HH:MM:SS');
+    lightingTimeFrom = passtimeDN - datenum('00:15', 'HH:MM');
+    lightingTimeTo = passtimeDN + datenum('00:15', 'HH:MM');
+
     % find ind during storm
     indDuringStorm = find( ...
-        stormStartTime <= lightningTime ...
-        & lightningTime <= stormEndTime ...
+          lightingTimeFrom <= lightningTime ...
+        & lightningTime <= lightingTimeTo ...
     );
     % find all in radius 600km
     indDuringInStorm = find(distCent(indDuringStorm) <= 600);
@@ -301,12 +306,14 @@ function PlotStormDPR( ...
     % scatter on 2D
     scatter( ...
         lonFound, latFound, ...
-        50, ...
+        16, ...
         'black', ...
         'filled', ...
         'LineWidth', .05, ...
         'MarkerEdgeColor', 'black' ...
     );
+
+    shg;
 
     % get and scale melting layer height (km)
     meltingHeightRaw = h5read(fname2A,'/NS/VER/heightZeroDeg');
@@ -321,8 +328,24 @@ function PlotStormDPR( ...
 
     %%
     % Set the view and lights
+
+    % set light
     camlight('headlight');
-    light('Position',[lonMax latMax 0],'Style','local');
+    light('Position',[lonMax2A latMax2A 0],'Style','local');
+    lighting gouraud
+
+    % set title
+    name = 'NS/PRE/heightStormTop';
+    title( ...
+        hAx, {stormName; outFname; name}, ...
+        'Interpreter', 'None', 'FontSize', 12, 'FontWeight', 'bold' ...
+    );
+
+    view(0, 90);
+
+    % gen full file name
+    fullOutFname = fullfile(outPath, [outFname, '.gif']);
+
 
 
 

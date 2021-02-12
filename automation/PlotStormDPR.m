@@ -264,44 +264,47 @@ function PlotStormDPR( ...
     lightningDistEW = lightningData{9};
     lightningDistNS = lightningData{10};
 
-    % Read storm information from file name
-    % 2A.GPM.DPR.V820180723.20200827-S024128-E031127.V06A.RT-H5
-    stormY = str2double(fname2A(23:26));
-    stormM = str2double(fname2A(27:28));
-    stormD = str2double(fname2A(29:30));
-    stormStartH = str2double(fname2A(33:34));
-    stormStartMN = str2double(fname2A(35:36));
-    stormStartS = str2double(fname2A(37:38));
-    stormEndH = str2double(fname2A(41:42));
-    stormEndMN = str2double(fname2A(43:44));
-    stormEndS = str2double(fname2A(45:46));
-    % org as serial date num
-    stormStartTime = datenum( ...
-        stormY, stormM, stormD, stormStartH, stormStartMN, stormStartS ...
-    );
-    stormEndTime = datenum( ...
-        stormY, stormM, stormD, stormEndH, stormEndMN, stormEndS ...
+    % % Read storm information from file name
+    % % 2A.GPM.DPR.V820180723.20200827-S024128-E031127.V06A.RT-H5
+    % stormY = str2double(fname2A(23:26));
+    % stormM = str2double(fname2A(27:28));
+    % stormD = str2double(fname2A(29:30));
+    % stormStartH = str2double(fname2A(33:34));
+    % stormStartMN = str2double(fname2A(35:36));
+    % stormStartS = str2double(fname2A(37:38));
+    % stormEndH = str2double(fname2A(41:42));
+    % stormEndMN = str2double(fname2A(43:44));
+    % stormEndS = str2double(fname2A(45:46));
+    % % org as serial date num
+    % stormStartTime = datenum( ...
+    %     stormY, stormM, stormD, stormStartH, stormStartMN, stormStartS ...
+    % );
+    % stormEndTime = datenum( ...
+    %     stormY, stormM, stormD, stormEndH, stormEndMN, stormEndS ...
+    % );
+
+    % get passtime as serial date num
+    passtimeDN = datenum(passtime, 'yyyy/mm/dd      HH:MM:SS');
+    MM15 = datenum(0,0,0,0,15,0);
+    lightningTimeFrom = passtimeDN - MM15;
+    lightningTimeTo = passtimeDN + MM15;
+
+    % find ind during storm
+    indDuringStorm = find( ...
+          lightningTimeFrom <= lightningTime ...
+        & lightningTime <= lightningTimeTo ...
     );
 
     % calculate pythagorean distance from center
     distCent = (lightningDistEW.^2 + lightningDistNS.^2).^0.5;
-
-    % get passtime as serial date num
-    passtimeDN = datenum(passtime, 'yyyy-mm-dd HH:MM:SS');
-    lightingTimeFrom = passtimeDN - datenum('00:15', 'HH:MM');
-    lightingTimeTo = passtimeDN + datenum('00:15', 'HH:MM');
-
-    % find ind during storm
-    indDuringStorm = find( ...
-          lightingTimeFrom <= lightningTime ...
-        & lightningTime <= lightingTimeTo ...
-    );
     % find all in radius 600km
-    indDuringInStorm = find(distCent(indDuringStorm) <= 600);
+    latTmp = lightningLat(indDuringStorm);
+    lonTmp = lightningLon(indDuringStorm);
+    indTimeDist = find(distCent(indDuringStorm) <= 600);
 
     % pruning lat/lon arrays to ind of during and in storm
-    latFound = lightningLat(indDuringInStorm);
-    lonFound = lightningLon(indDuringInStorm);
+    latFound = latTmp(indTimeDist);
+    lonFound = lonTmp(indTimeDist);
 
     % scatter on 2D
     scatter( ...
